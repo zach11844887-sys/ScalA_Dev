@@ -338,7 +338,7 @@ Module FsWatcher
                 End If
             Next
         End If
-        'todo update clipboard
+        InvalidateClipboardIfContains(e.FullPath)
     End Sub
     Private Sub OnRenamedDir(sender As System.IO.FileSystemWatcher, e As System.IO.RenamedEventArgs)
         dBug.Print($"Renamed Dir: {sender.NotifyFilter}")
@@ -373,7 +373,7 @@ Module FsWatcher
                 End If
             End If
         End If
-        'todo update clipboard
+        InvalidateClipboardIfContains(e.FullPath)
     End Sub
 
     Private Sub OnRenamed(sender As System.IO.FileSystemWatcher, e As System.IO.RenamedEventArgs)

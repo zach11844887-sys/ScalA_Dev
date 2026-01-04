@@ -1,6 +1,6 @@
 ﻿Imports System.Runtime.InteropServices
 
-Module ClipBoardHelper
+Public Module ClipBoardHelper
 
     Public clipBoardInfo As ClipboardFileInfo
 
@@ -50,6 +50,9 @@ Module ClipBoardHelper
 
     End Sub
 #End If
+    ''' <summary>
+    ''' Information about files currently on the clipboard
+    ''' </summary>
     Public Structure ClipboardFileInfo
         Public Files As List(Of String)
         Public Action As DragDropEffects
@@ -106,5 +109,44 @@ Module ClipBoardHelper
         End If
     End Sub
 
+
+    ''' <summary>
+    ''' Clears the clipboard if it contains the specified path.
+    ''' Must be called when a file/folder that might be in the clipboard is deleted.
+    ''' </summary>
+    ''' <param name="deletedPath">Path of the deleted file or folder</param>
+    Public Sub InvalidateClipboardIfContains(deletedPath As String)
+        If clipBoardInfo.Files Is Nothing OrElse clipBoardInfo.Files.Count = 0 Then
+            Exit Sub
+        End If
+
+        ' Check if deleted path is in clipboard (exact match or parent folder)
+        Dim normalizedDeleted = deletedPath.TrimEnd("\"c).ToLowerInvariant()
+        Dim shouldClear = clipBoardInfo.Files.Any(Function(f)
+                                                      Dim normalizedClip = f.TrimEnd("\"c).ToLowerInvariant()
+                                                      Return normalizedClip = normalizedDeleted OrElse
+                                                             normalizedClip.StartsWith(normalizedDeleted & "\")
+                                                  End Function)
+
+        If shouldClear Then
+            dBug.Print($"Clipboard invalidated: deleted path was in clipboard - {deletedPath}")
+            ' Must invoke on UI thread since Clipboard requires STA
+            If FrmMain.InvokeRequired Then
+                FrmMain.BeginInvoke(Sub()
+                                        Clipboard.Clear()
+                                        clipBoardInfo = New ClipboardFileInfo With {
+                                            .Files = New List(Of String),
+                                            .Action = DragDropEffects.None
+                                        }
+                                    End Sub)
+            Else
+                Clipboard.Clear()
+                clipBoardInfo = New ClipboardFileInfo With {
+                    .Files = New List(Of String),
+                    .Action = DragDropEffects.None
+                }
+            End If
+        End If
+    End Sub
 
 End Module
