@@ -343,6 +343,12 @@ SDL2Wrapper/*.obj
 SDL2Wrapper/*.res
 SDL2Wrapper/build_output.txt
 
+# ModAPI build outputs
+ModAPI/*.dll
+ModAPI/*.exp
+ModAPI/*.lib
+ModAPI/*.obj
+
 # Misc
 nul
 pr_body.md
