@@ -374,6 +374,19 @@ Public NotInheritable Class AstoniaProcess : Implements IDisposable
                     .SlidingExpiration = TimeSpan.FromMinutes(1)} ' Cache for 1 minute with sliding expiration
     Public hasLoggedIn As Boolean = False
     Public loggedInAs As String = String.Empty
+
+    ''' <summary>
+    ''' Tracks the last time meaningful input (mouse click) was detected for this client.
+    ''' Used to warn users when a client is about to timeout due to inactivity.
+    ''' </summary>
+    Public LastInputTime As DateTime = DateTime.Now
+
+    ''' <summary>
+    ''' Records that input was detected for this client, resetting the inactivity timer.
+    ''' </summary>
+    Public Sub RecordInput()
+        LastInputTime = DateTime.Now
+    End Sub
     Dim gti As New GUITHREADINFO() With {.cbSize = CUInt(Marshal.SizeOf(GetType(GUITHREADINFO)))}
     Dim DoNotReplaceHwnd As IntPtr = IntPtr.Zero
     Public ReadOnly Property Name As String

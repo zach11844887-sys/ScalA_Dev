@@ -154,6 +154,11 @@ Partial NotInheritable Class FrmMain
 
         If pbZoom.Contains(MousePosition) Then
 
+            ' Track input for inactivity timeout warning
+            If (MouseButtons.HasFlag(MouseButtons.Left) OrElse MouseButtons.HasFlag(MouseButtons.Right)) AndAlso AltPP IsNot Nothing Then
+                AltPP.RecordInput()
+            End If
+
             If pci.flags = 0 Then ' cursor is hidden
                 wasVisible = False
                 Exit Sub ' do not move astonia when cursor is hidden. fixes scrollbar thumb.
@@ -392,6 +397,23 @@ Partial NotInheritable Class FrmMain
                         End If
 
                         but.ContextMenuStrip = cmsAlt
+
+                        ' Check for inactivity warning (9 minutes = 540 seconds, 1 minute before 10-min server timeout)
+                        Const INACTIVITY_WARNING_SECONDS As Integer = 540
+                        Dim secondsInactive = (DateTime.Now - ap.LastInputTime).TotalSeconds
+                        Dim wasWarning = but.IsInactivityWarning
+
+                        If secondsInactive >= INACTIVITY_WARNING_SECONDS Then
+                            but.IsInactivityWarning = True
+                        Else
+                            but.IsInactivityWarning = False
+                        End If
+
+                        ' Update button color if warning state changed
+                        If wasWarning <> but.IsInactivityWarning Then
+                            Me.BeginInvoke(Sub() but.UpdateBackColor())
+                        End If
+
                         'Me.Invoke(Function() cboAlt.SelectedIndex = 0) 'do not use index as it changes when hovering dropdown items
                         If pnlOverview.Visible Then
                             If Not startThumbsDict.ContainsKey(apID) Then
@@ -420,6 +442,11 @@ Partial NotInheritable Class FrmMain
                         but.BackgroundImage = Nothing
                         but.Image = Nothing
                         but.pidCache = 0
+                        ' Reset inactivity warning for empty buttons
+                        If but.IsInactivityWarning Then
+                            but.IsInactivityWarning = False
+                            Me.BeginInvoke(Sub() but.UpdateBackColor())
+                        End If
                     End If
                 Catch ex As Exception
                     dBug.Print($"Button cleanup failed: {ex.Message}")
@@ -435,6 +462,11 @@ Partial NotInheritable Class FrmMain
                 If but IsNot Nothing Then
                     thumbContainedMouse = True
                     Dim ap = but.AP
+
+                    ' Track input for inactivity timeout warning
+                    If MouseButtons.HasFlag(MouseButtons.Left) OrElse MouseButtons.HasFlag(MouseButtons.Right) Then
+                        ap.RecordInput()
+                    End If
                     Dim rcwB As Rectangle = ap.WindowRect
                     Dim rccB As Rectangle = ap.ClientRect
                     Dim pci As New CURSORINFO With {.cbSize = Runtime.InteropServices.Marshal.SizeOf(GetType(CURSORINFO))}

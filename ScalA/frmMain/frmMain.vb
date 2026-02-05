@@ -2112,6 +2112,9 @@ Partial Public NotInheritable Class FrmMain
             'SendMouseInput(If(e.Button = MouseButtons.Right, MouseEventF.RightDown, MouseEventF.MiddleDown))
 
             SendMessage(AltPP?.MainWindowHandle, If(e.Button = MouseButtons.Right, WM_RBUTTONDOWN, WM_MBUTTONDOWN), wparam, New LParamMap(mx, my))
+
+            ' Track input for inactivity timeout warning
+            AltPP?.RecordInput()
         End If
 
 

@@ -3,6 +3,12 @@
 End Class
 Public NotInheritable Class AButton
     Inherits Button
+
+    ''' <summary>
+    ''' Orange color used to warn about imminent inactivity timeout.
+    ''' </summary>
+    Private Shared ReadOnly COLOR_INACTIVITY_WARNING As Color = Color.FromArgb(&HFFFFA500)
+
     Public Sub New(ByVal text As String, ByVal left As Integer, ByVal top As Integer, ByVal width As Integer, ByVal height As Integer)
         MyBase.New()
 
@@ -31,6 +37,12 @@ Public NotInheritable Class AButton
     Public Shared NormalFont As Font = New Font("Microsoft Sans Serif", 12, GraphicsUnit.Pixel)
     Public Shared BoldFont As Font = New Font("Microsoft Sans Serif", 13, FontStyle.Bold, GraphicsUnit.Pixel)
 
+    ''' <summary>
+    ''' When True, the button will display an orange warning background to indicate
+    ''' the client is about to timeout due to inactivity.
+    ''' </summary>
+    Public Property IsInactivityWarning As Boolean = False
+
     Public pidCache As Integer
     Public AP As AstoniaProcess
 
@@ -58,7 +70,10 @@ Public NotInheritable Class AButton
 
     Protected Overrides Sub OnMouseEnter(e As EventArgs)
         MyBase.OnMouseEnter(e)
-        If My.Settings.DarkMode Then
+        If IsInactivityWarning Then
+            ' Keep warning color but slightly lighter on hover
+            Me.BackColor = Color.FromArgb(&HFFFFB347) ' Lighter orange
+        ElseIf My.Settings.DarkMode Then
             Me.BackColor = Color.FromArgb(&HFFA2A2A2)
         Else
             Me.BackColor = Color.FromArgb(&HFFE5F1FB)
@@ -66,10 +81,25 @@ Public NotInheritable Class AButton
     End Sub
     Protected Overrides Sub OnMouseLeave(e As EventArgs)
         MyBase.OnMouseLeave(e)
-        If My.Settings.DarkMode Then
+        If IsInactivityWarning Then
+            Me.BackColor = COLOR_INACTIVITY_WARNING
+        ElseIf My.Settings.DarkMode Then
             Me.BackColor = If(Me.ContextMenuStrip?.Visible AndAlso Me.ContextMenuStrip Is FrmMain.cmsAlt, Color.FromArgb(&HFFA2A2A2), Color.DarkGray)
         Else
             Me.BackColor = If(Me.ContextMenuStrip?.Visible AndAlso Me.ContextMenuStrip Is FrmMain.cmsAlt, COLOR_HIGHLIGHT_BLUE, COLOR_LIGHT_GRAY)
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' Updates the background color based on current state (inactivity warning, dark mode, etc.)
+    ''' </summary>
+    Public Sub UpdateBackColor()
+        If IsInactivityWarning Then
+            Me.BackColor = COLOR_INACTIVITY_WARNING
+        ElseIf My.Settings.DarkMode Then
+            Me.BackColor = Color.DarkGray
+        Else
+            Me.BackColor = COLOR_LIGHT_GRAY
         End If
     End Sub
 
